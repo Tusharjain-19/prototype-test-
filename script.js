@@ -81,8 +81,7 @@ function handleBLEData(event) {
 // Check if emergency alert can be triggered (throttling)
 function canTriggerEmergency() {
   const now = Date.now();
-  // Remove timestamps older than 20 sec
-  alertTimestamps = alertTimestamps.filter(ts => now - ts < 20000);
+  alertTimestamps = alertTimestamps.filter(ts => now - ts < 20000); // 20 sec window
   return alertTimestamps.length < 3 && !emergencyActive;
 }
 
@@ -210,17 +209,32 @@ function sendAllAlerts(location, mapsUrl) {
   const emailSubject = '🚨 EMERGENCY: Fall Detected';
   const emailBody = `Fall detected!\n\nLocation: ${location}\nMaps: ${mapsUrl}`;
 
-  // SMS
-  if (caregiverData.phone) window.location.href = `sms:${caregiverData.phone}?body=${encodeURIComponent(smsMsg)}`;
+  // 1️⃣ SMS
+  if (caregiverData.phone) {
+    window.location.href = `sms:${caregiverData.phone}?body=${encodeURIComponent(smsMsg)}`;
+  }
 
-  // WhatsApp
-  if (caregiverData.phone) window.open(`https://wa.me/${caregiverData.phone.replace(/[^0-9]/g, '')}?text=${encodeURIComponent(whatsappMsg)}`, '_blank');
+  // 2️⃣ WhatsApp (automatically opens new tab)
+  if (caregiverData.phone) {
+    setTimeout(() => {
+      const phoneNumber = caregiverData.phone.replace(/[^0-9]/g, '');
+      const waUrl = `https://wa.me/${phoneNumber}?text=${encodeURIComponent(whatsappMsg)}`;
+      window.open(waUrl, '_blank');
+    }, 500); // small delay
+  }
 
-  // Email
-  if (caregiverData.email) window.open(`mailto:${caregiverData.email}?subject=${encodeURIComponent(emailSubject)}&body=${encodeURIComponent(emailBody)}`);
+  // 3️⃣ Email
+  if (caregiverData.email) {
+    setTimeout(() => {
+      const mailtoUrl = `mailto:${caregiverData.email}?subject=${encodeURIComponent(emailSubject)}&body=${encodeURIComponent(emailBody)}`;
+      window.open(mailtoUrl);
+    }, 1000);
+  }
 
-  // Telegram
-  sendTelegramAlert(`🚨 <b>EMERGENCY ALERT!</b>\nFall detected!\nCaregiver: ${caregiverData.name}\n${location}\n${mapsUrl}`);
+  // 4️⃣ Telegram
+  setTimeout(() => {
+    sendTelegramAlert(`🚨 <b>EMERGENCY ALERT!</b>\nFall detected!\nCaregiver: ${caregiverData.name}\n${location}\n${mapsUrl}`);
+  }, 1500);
 }
 
 // Get current location
@@ -237,7 +251,7 @@ async function notifyUser(message) {
   if (Notification.permission === 'granted') new Notification('Vital Band Alert', { body: message });
 }
 
-// Update dashboard
+// Update dashboard UI
 function updateDashboard({ steps, heartRate, fall, lat, lng }) {
   const stepsEl = document.getElementById('steps');
   const heartRateEl = document.getElementById('heart-rate');
@@ -250,6 +264,8 @@ function updateDashboard({ steps, heartRate, fall, lat, lng }) {
   currentData = { heartRate, steps, fall, lat, lng };
 }
 
+// Initialize
+connectBtn.addEventListener('click', connectToBLE);
 document.addEventListener('DOMContentLoaded', () => {
   initializeCaregiverSettings();
   if (!navigator.bluetooth) {
@@ -258,5 +274,3 @@ document.addEventListener('DOMContentLoaded', () => {
     alert('Web Bluetooth is not supported in this browser. Please use Chrome, Edge, or Safari.');
   }
 });
-
-connectBtn.addEventListener('click', connectToBLE);
