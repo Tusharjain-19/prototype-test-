@@ -22,8 +22,8 @@ const BLE_SERVICE_UUID = 'e267751a-ae76-11eb-8529-0242ac130003';
 const BLE_CHARACTERISTIC_UUID = 'e267751b-ae76-11eb-8529-0242ac130003';
 
 // TELEGRAM CONFIG
-const TELEGRAM_BOT_TOKEN = "7805125993:AAEwn_JivPsDbC5xKkISv7eM-pClH9bbkAQ";  
-const TELEGRAM_CHAT_ID = "6286498044";      
+const TELEGRAM_BOT_TOKEN = "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx";  
+const TELEGRAM_CHAT_ID = "xxxxxxxxxx";      
 
 // Connect to BLE device
 async function connectToBLE() {
@@ -274,3 +274,4 @@ document.addEventListener('DOMContentLoaded', () => {
     alert('Web Bluetooth is not supported in this browser. Please use Chrome, Edge, or Safari.');
   }
 });
+
