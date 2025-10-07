@@ -22,8 +22,8 @@ const BLE_SERVICE_UUID = 'e267751a-ae76-11eb-8529-0242ac130003';
 const BLE_CHARACTERISTIC_UUID = 'e267751b-ae76-11eb-8529-0242ac130003';
 
 // TELEGRAM CONFIG
-const TELEGRAM_BOT_TOKEN = "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx";  
-const TELEGRAM_CHAT_ID = "xxxxxxxxxx";      
+const TELEGRAM_BOT_TOKEN = "7805125993:AAEwn_JivPsDbC5xKkISv7eM-pClH9bbkAQ";  
+const TELEGRAM_CHAT_ID = "6286498044";      
 
 // Connect to BLE device
 async function connectToBLE() {
@@ -81,7 +81,8 @@ function handleBLEData(event) {
 // Check if emergency alert can be triggered (throttling)
 function canTriggerEmergency() {
   const now = Date.now();
-  alertTimestamps = alertTimestamps.filter(ts => now - ts < 20000); // 20 sec window
+  // Remove timestamps older than 20 sec
+  alertTimestamps = alertTimestamps.filter(ts => now - ts < 20000);
   return alertTimestamps.length < 3 && !emergencyActive;
 }
 
@@ -209,32 +210,17 @@ function sendAllAlerts(location, mapsUrl) {
   const emailSubject = '🚨 EMERGENCY: Fall Detected';
   const emailBody = `Fall detected!\n\nLocation: ${location}\nMaps: ${mapsUrl}`;
 
-  // 1️⃣ SMS
-  if (caregiverData.phone) {
-    window.location.href = `sms:${caregiverData.phone}?body=${encodeURIComponent(smsMsg)}`;
-  }
+  // SMS
+  if (caregiverData.phone) window.location.href = `sms:${caregiverData.phone}?body=${encodeURIComponent(smsMsg)}`;
 
-  // 2️⃣ WhatsApp (automatically opens new tab)
-  if (caregiverData.phone) {
-    setTimeout(() => {
-      const phoneNumber = caregiverData.phone.replace(/[^0-9]/g, '');
-      const waUrl = `https://wa.me/${phoneNumber}?text=${encodeURIComponent(whatsappMsg)}`;
-      window.open(waUrl, '_blank');
-    }, 500); // small delay
-  }
+  // WhatsApp
+  if (caregiverData.phone) window.open(`https://wa.me/${caregiverData.phone.replace(/[^0-9]/g, '')}?text=${encodeURIComponent(whatsappMsg)}`, '_blank');
 
-  // 3️⃣ Email
-  if (caregiverData.email) {
-    setTimeout(() => {
-      const mailtoUrl = `mailto:${caregiverData.email}?subject=${encodeURIComponent(emailSubject)}&body=${encodeURIComponent(emailBody)}`;
-      window.open(mailtoUrl);
-    }, 1000);
-  }
+  // Email
+  if (caregiverData.email) window.open(`mailto:${caregiverData.email}?subject=${encodeURIComponent(emailSubject)}&body=${encodeURIComponent(emailBody)}`);
 
-  // 4️⃣ Telegram
-  setTimeout(() => {
-    sendTelegramAlert(`🚨 <b>EMERGENCY ALERT!</b>\nFall detected!\nCaregiver: ${caregiverData.name}\n${location}\n${mapsUrl}`);
-  }, 1500);
+  // Telegram
+  sendTelegramAlert(`🚨 <b>EMERGENCY ALERT!</b>\nFall detected!\nCaregiver: ${caregiverData.name}\n${location}\n${mapsUrl}`);
 }
 
 // Get current location
@@ -251,7 +237,7 @@ async function notifyUser(message) {
   if (Notification.permission === 'granted') new Notification('Vital Band Alert', { body: message });
 }
 
-// Update dashboard UI
+// Update dashboard
 function updateDashboard({ steps, heartRate, fall, lat, lng }) {
   const stepsEl = document.getElementById('steps');
   const heartRateEl = document.getElementById('heart-rate');
@@ -264,8 +250,6 @@ function updateDashboard({ steps, heartRate, fall, lat, lng }) {
   currentData = { heartRate, steps, fall, lat, lng };
 }
 
-// Initialize
-connectBtn.addEventListener('click', connectToBLE);
 document.addEventListener('DOMContentLoaded', () => {
   initializeCaregiverSettings();
   if (!navigator.bluetooth) {
@@ -275,3 +259,4 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 });
 
+connectBtn.addEventListener('click', connectToBLE);
